@@ -1,35 +1,37 @@
 name: Thank Contributors
 
 on:
-  pull_request:
-    types: [closed]
+  push:
+    branches:
+      - main
+      - develop
+      - master
+
+permissions:
+  contents: write
 
 jobs:
   thank:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
 
     steps:
-      - name: Thank contributor for merged PR
+      - name: Thank contributor
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const contributor = context.payload.pull_request.user.login;
-            const prNumber = context.payload.pull_request.number;
-            const prTitle = context.payload.pull_request.title;
-            const mergedBy = context.payload.pull_request.merged_by.login;
+            const contributor = context.payload.pusher.name;
+            const commitSha = context.sha.substring(0, 7);
+            const commitMessage = context.payload.head_commit.message.split('\n')[0];
 
-            // Build the comment body
-            const commentBody = `🎉 Thank you @${contributor} for your contribution!\n\n` +
-                                `Your pull request #${prNumber} "${prTitle}" has been successfully merged! 🚀\n\n` +
-                                `We appreciate your effort in making this project better! ✨\n\n` +
-                                `Merged by: @${mergedBy}`;
+            const commentBody = `🎉 Thank you @${contributor} for contributing!\n\n` +
+                                `Commit: ${commitSha}\n` +
+                                `Message: "${commitMessage}"\n\n` +
+                                `Your contributions make this project better! 🚀`;
 
-            // Create a comment on the merged PR
-            await github.rest.issues.createComment({
+            await github.rest.repos.createCommitComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              issue_number: prNumber,
+              commit_sha: context.sha,
               body: commentBody
             });
