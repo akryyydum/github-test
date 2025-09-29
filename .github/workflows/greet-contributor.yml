@@ -20,8 +20,8 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const contributor = context.payload.pusher.name;
-            const commitSha = context.sha.substring(0, 7);
+            const contributor = context.actor;
+            const commitSha = context.payload.head_commit.id.substring(0,7);
             const commitMessage = context.payload.head_commit.message.split('\n')[0];
 
             const commentBody = `🎉 Thank you @${contributor} for contributing!\n\n` +
@@ -32,6 +32,6 @@ jobs:
             await github.rest.repos.createCommitComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              commit_sha: context.sha,
+              commit_sha: context.payload.head_commit.id,
               body: commentBody
             });
