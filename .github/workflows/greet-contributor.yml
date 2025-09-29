@@ -1,36 +1,35 @@
 name: Thank Contributors
 
 on:
-  push:
-    branches:
-      - main
-      - develop
-      - master
+  pull_request:
+    types: [closed]
 
 jobs:
   thank:
     runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
 
     steps:
-      - name: Thank contributor
+      - name: Thank contributor for merged PR
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const contributor = context.payload.pusher.name;
-            const commitSha = context.sha.substring(0, 7);
-            const commitMessage = context.payload.head_commit.message.split('\n')[0];
+            const contributor = context.payload.pull_request.user.login;
+            const prNumber = context.payload.pull_request.number;
+            const prTitle = context.payload.pull_request.title;
+            const mergedBy = context.payload.pull_request.merged_by.login;
 
-            // Build the comment body as a single string
-            const commentBody = `🎉 Thank you @${contributor} for contributing!\n\n` +
-                                `Commit: ${commitSha}\n` +
-                                `Message: "${commitMessage}"\n\n` +
-                                `Your contributions make this project better! 🚀`;
+            // Build the comment body
+            const commentBody = `🎉 Thank you @${contributor} for your contribution!\n\n` +
+                                `Your pull request #${prNumber} "${prTitle}" has been successfully merged! 🚀\n\n` +
+                                `We appreciate your effort in making this project better! ✨\n\n` +
+                                `Merged by: @${mergedBy}`;
 
-            // Create a commit comment
-            await github.rest.repos.createCommitComment({
+            // Create a comment on the merged PR
+            await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              commit_sha: context.sha,
+              issue_number: prNumber,
               body: commentBody
             });
