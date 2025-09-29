@@ -1,0 +1,20 @@
+name: HTML Lint Check
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  html-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install HTML-Validate
+        run: npm install -g html-validate
+
+      - name: Run HTML validation
+        run: html-validate "**/*.html"
